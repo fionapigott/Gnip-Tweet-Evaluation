@@ -11,8 +11,8 @@ from matplotlib import dates, use
 def dump_conversation(results,args):
     
     # the name of the analysis
-    uid = results["audience_id_string"]
-    data_loc = "./"
+    uid = results["unique_id"]
+    data_loc = "/home/jkolb/test/"
 
     # make a directory to write the full outputs
     try:
@@ -129,8 +129,8 @@ def dump_conversation(results,args):
 def dump_audience(results,args):
 
     # the name of the analysis
-    uid = results["audience_id_string"]
-    data_loc = "/home/jkolb/DDIS-DSO/ABInBev/dsrp/data/audience_and_convo_insights/"
+    uid = results["unique_id"]
+    data_loc = "/home/jkolb/test/"
     # make a directory to write the full outputs
     try:
         os.stat(data_loc + uid)

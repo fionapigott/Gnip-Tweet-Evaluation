@@ -8,8 +8,8 @@ import datetime
 from insights import analysis,output,search
 
 parser = argparse.ArgumentParser()
-parser.add_argument("-n","--audience_name",dest="audience_identifier", default=None,
-        help="must provide a name string for the conversation/audience")
+parser.add_argument("-n","--identifier",dest="unique_identifier", default=None,
+        help="a unique name to identify the conversation/audience")
 parser.add_argument("-c","--do-conversation-analysis",dest="do_conversation_analysis",action="store_true",default=False,
         help="do conversation analysis on Tweets")
 parser.add_argument("-a","--do-audience-analysis",dest="do_audience_analysis",action="store_true",default=False,
@@ -26,20 +26,26 @@ args = parser.parse_args()
 
 # sanity checking
 if (args.full_tweet_input and args.tweet_id_input) or (args.full_tweet_input and args.user_id_input) or (args.tweet_id_input and args.user_id_input):
-    sys.stderr.write("Must not choose more than one input type\n")
+    sys.stderr.write("Must not choose more than one input type.\n")
+    sys.exit()
+
+if (args.full_tweet_input is False and args.tweet_id_input is False and args.user_id_input is False):
+    sys.stderr.write("Must choose one input type.\n")
     sys.exit()
 
 ##
 ## analysis
 ##
 
-# set up input
-assert args.audience_identifier is not None, "You must provide an id for the analysis"
-
 time_string = datetime.datetime.now().isoformat().split(".")[0].translate(None,":")
-conversation_results = {"audience_id_string": args.audience_identifier + "_" + time_string }
-audience_results = {"audience_id_string": args.audience_identifier + "_" + time_string}
 
+# entries in these dictionaries map measurement names to data collections
+# start by creating a unique ID from the audience/conversation identifier and the current time
+audience_results = {"unique_id": args.unique_identifier + "_" + time_string}
+conversation_results = {"unique_id": args.unique_identifier + "_" + time_string}
+
+
+# manage input sources
 if args.input_file_name is not None:
     generator = open(args.input_file_name)
 else:
@@ -72,8 +78,11 @@ if args.tweet_id_input:
     tweet_ids = set(tweet_ids)
 
     user_ids = []
-    # this might not scale
-    tweets = search.get_tweets_from_ids(tweet_ids)
+    # this might not scale 
+    try:
+        tweets = search.get_tweets_from_ids(tweet_ids)
+    except NotImplementedError: 
+        tweets = []
     for tweet in tweets: 
         if args.do_conversation_analysis:
             analysis.analyze_tweet(tweet,conversation_results)
@@ -96,26 +105,26 @@ if args.user_id_input:
         analysis.analyze_user_ids(user_ids,audience_results)
 
     # this might not scale
-    tweets = search.get_tweets_from_user_ids(user_ids)
-    user_ids = []
+    try:
+        tweets = search.get_tweets_from_user_ids(user_ids) 
+    except NotImplementedError:
+        tweets = []
     for tweet in tweets: 
         if args.do_conversation_analysis:
             analysis.analyze_tweet(tweet,conversation_results)
     
         if args.do_audience_analysis:
             user_id = int(tweet["actor"]["id"].split(":")[2]) 
-            if user_id not in user_ids:
-                bio = tweet["actor"]["summary"]
-                analysis.analyze_bio(bio,audience_results) 
-                user_ids.append(user_id)
+            bio = tweet["actor"]["summary"]
+            analysis.analyze_bio(bio,user_id,audience_results) 
 
 ##
 ## format and dump results
 ##
 if args.do_conversation_analysis:
-    analysis.summarize_tweets(conversation_results)
+    analysis.summarize_tweets(conversation_results,args)
     output.dump_conversation(conversation_results,args)
 if args.do_audience_analysis:
-    analysis.summarize_audience(audience_results)
+    analysis.summarize_audience(audience_results,args)
     output.dump_audience(audience_results,args)
 

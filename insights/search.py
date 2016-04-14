@@ -1,5 +1,5 @@
 def get_tweets_from_ids(tweet_ids):
-    return []
+    raise NotImplementedError
 
 def get_tweets_from_user_ids(user_ids):
-    return []
+    raise NotImplementedError

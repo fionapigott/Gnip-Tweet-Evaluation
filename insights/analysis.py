@@ -118,7 +118,7 @@ def analyze_user_ids(user_ids,results, groupings = None):
     """ call to Audience API goes here """
     import audience_api as api
 
-    aud_name = results["audience_id_string"]
+    aud_name = results["unique_id"]
 
     if groupings is not None:
         use_groupings = groupings
@@ -139,10 +139,10 @@ def analyze_user_ids(user_ids,results, groupings = None):
             max_upload_size = 100000, max_segment_size = 3000000, max_audience_size = 3000000, min_audience_size = 10000)
     results["audience_api"] = audience_api_results
 
-def summarize_tweets(results):
+def summarize_tweets(results,args):
     """ Generate summary items in results """
     pass
 
-def summarize_audience(results):
+def summarize_audience(results,args):
     """ Generate summary items in results """
     pass

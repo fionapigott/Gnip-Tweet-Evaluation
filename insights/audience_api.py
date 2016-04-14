@@ -19,14 +19,14 @@ def single_audience_query(user_ids, groupings, audience_name,  max_upload_size =
         return "Not enough users to run the audience API"
 
     # Set up credentials (user-specific)
-    creds = yaml.load(open("/mnt/home/fiona/.audience_api_creds","r"))
+    creds = yaml.load(open("/mnt/home/jkolb/.audience_api_creds","r"))
     auth=OAuth1(creds["consumer_key"],creds["consumer_secret"],creds["token"],creds["token_secret"])
     
     base_url = creds["url"]
     json_header = {"Content-Type" : "application/json"}
 
     if log_file_location is None:
-        log_file_loc = "/home/jkolb/DDIS-DSO/ABInBev/dsrp/data/audience_and_convo_insights/"
+        log_file_loc = "/home/jkolb/test/"
     else:
         log_file_loc = log_file_location
 
@@ -167,7 +167,7 @@ def call_audience_api(user_ids,audience_name, groupings = None,max_audience_size
         use_groupings = json.dumps(grouping_dict)
     
     audience_api_results = many_audience_query(user_ids, use_groupings, aud_name,  
-            max_upload_size = 100000, max_segment_size = 3000000, max_audience_size = max_audience_size, min_audience_size = 10000, log_file_location = log_file_location)
+            max_upload_size = 100000, max_segment_size = 3000000, max_audience_size = max_audience_size, min_audience_size = 10000, log_file_location = log_file_location) 
     
     return audience_api_results
 
