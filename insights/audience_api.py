@@ -10,7 +10,7 @@ import os
 import argparse
 import datetime
 
-def single_audience_query(user_ids, groupings, audience_name,  max_upload_size = 100000, max_segment_size = 3000000, min_audience_size = 10000, log_file_location = None):
+def single_audience_query(user_ids, groupings, audience_name, log_file_location, max_upload_size = 100000, max_segment_size = 3000000, min_audience_size = 10000): 
     """
     Make 1 request for audience information
     """
@@ -19,23 +19,13 @@ def single_audience_query(user_ids, groupings, audience_name,  max_upload_size =
         return "Not enough users to run the audience API"
 
     # Set up credentials (user-specific)
-    creds = yaml.load(open("/mnt/home/jkolb/.audience_api_creds","r"))
+    creds = yaml.load(open("/home/" + os.getenv('USER') + "/.audience_api_creds","r"))
     auth=OAuth1(creds["consumer_key"],creds["consumer_secret"],creds["token"],creds["token_secret"])
     
     base_url = creds["url"]
     json_header = {"Content-Type" : "application/json"}
 
-    if log_file_location is None:
-        log_file_loc = "/home/jkolb/test/"
-    else:
-        log_file_loc = log_file_location
-
-    try:
-        os.stat(log_file_loc + audience_name + "_logging")
-    except:
-        os.mkdir(log_file_loc + audience_name + "_logging")
-
-    logging = open(log_file_loc + audience_name + "_logging" + "/log_file_for_" + audience_name, "w")
+    logging = open(log_file_location + audience_name + "_logging" + "/log_file_for_" + audience_name, "w")
 
     # split the UIDS into max_upload_size 
     user_id_chunks = chunks(list(set(user_ids)), max_upload_size)
@@ -81,7 +71,7 @@ def single_audience_query(user_ids, groupings, audience_name,  max_upload_size =
     
     return audience_info.json()
 
-def many_audience_query(user_ids, groupings, audience_name, max_upload_size = 100000, max_segment_size = 3000000, max_audience_size = 3000000, min_audience_size = 10000, log_file_location = None):
+def many_audience_query(user_ids, groupings, audience_name, log_file_location, max_upload_size = 100000, max_segment_size = 3000000, max_audience_size = 3000000, min_audience_size = 10000):
     """
     Make 1 request for audience information for each max_audience_size audience in the set
     """
@@ -94,11 +84,13 @@ def many_audience_query(user_ids, groupings, audience_name, max_upload_size = 10
     size_audiences = int(ceil(len(unique_user_ids)/float(num_audiences)))
     
     for i, audience_chunk in enumerate(chunks(unique_user_ids, size_audiences)):
-        api_results.append(single_audience_query(audience_chunk, groupings, audience_name + "_" + str(i), max_upload_size = 100000, max_segment_size = 3000000, log_file_location = log_file_location))
+        api_results.append(single_audience_query(audience_chunk, groupings, audience_name + "_" + str(i), log_file_location, max_upload_size = 100000, max_segment_size = 3000000)) 
     return api_results
 
 def existing_audience_query(groupings, audience_name, log_file_location = None):
-    
+   
+    """ THIS ISN'T CURRENTLY CALLED BY ANYTHING """
+
     # Set up credentials (user-specific)
     creds = yaml.load(open("audience_api_creds.yaml","r"))
     auth=OAuth1(creds["consumer_key"],creds["consumer_secret"],creds["token"],creds["token_secret"])
@@ -107,7 +99,7 @@ def existing_audience_query(groupings, audience_name, log_file_location = None):
     json_header = {"Content-Type" : "application/json"} 
    
     if log_file_location is None:
-        log_file_loc = "/home/jkolb/DDIS-DSO/ABInBev/dsrp/data/audience_and_convo_insights/"
+        log_file_loc = "/home/" + os.getenv('USER') 
     else:
         log_file_loc = log_file_location
     
@@ -150,6 +142,16 @@ def chunks(l, n):
 def call_audience_api(user_ids,audience_name, groupings = None,max_audience_size=3000000, log_file_location=None):
     """ call to Audience API goes here """
 
+    if log_file_location is None:
+        log_file_loc = "/home/" + os.getenv('USER') + "/log/"
+    else:
+        log_file_loc = log_file_location
+
+    try:
+        os.stat(log_file_loc + audience_name + "_logging")
+    except:
+        os.mkdir(log_file_loc + audience_name + "_logging")
+    
     aud_name = audience_name
     if groupings is not None:
         use_groupings = groupings
@@ -166,8 +168,15 @@ def call_audience_api(user_ids,audience_name, groupings = None,max_audience_size
             , "language": {"group_by": ["user.language"]}}}
         use_groupings = json.dumps(grouping_dict)
     
-    audience_api_results = many_audience_query(user_ids, use_groupings, aud_name,  
-            max_upload_size = 100000, max_segment_size = 3000000, max_audience_size = max_audience_size, min_audience_size = 10000, log_file_location = log_file_location) 
+    audience_api_results = many_audience_query(user_ids
+            , use_groupings
+            , aud_name
+            , log_file_loc 
+            , max_upload_size = 100000
+            , max_segment_size = 3000000
+            , max_audience_size = max_audience_size
+            , min_audience_size = 10000
+            )  
     
     return audience_api_results
 
