@@ -139,18 +139,18 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
-def call_audience_api(user_ids,audience_name, groupings = None,max_audience_size=3000000, log_file_location=None):
+def call_audience_api(user_ids
+        , audience_name
+        , log_file_location
+        , groupings = None
+        , max_audience_size=3000000
+        ):
     """ call to Audience API goes here """
 
-    if log_file_location is None:
-        log_file_loc = "/home/" + os.getenv('USER') + "/log/"
-    else:
-        log_file_loc = log_file_location
-
     try:
-        os.stat(log_file_loc + audience_name + "_logging")
+        os.stat(log_file_location + audience_name + "_logging")
     except:
-        os.mkdir(log_file_loc + audience_name + "_logging")
+        os.mkdir(log_file_location + audience_name + "_logging")
     
     aud_name = audience_name
     if groupings is not None:

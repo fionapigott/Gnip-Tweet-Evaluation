@@ -1,4 +1,5 @@
 import sys
+import os
 import ujson as json 
 import logging
 from collections import defaultdict
@@ -120,6 +121,12 @@ def analyze_user_ids(user_ids,results, groupings = None):
 
     aud_name = results["unique_id"]
 
+    log_file_location = "/home/" + os.getenv('USER') + '/audience_api_logging/'
+    try:
+        os.stat(log_file_location) 
+    except OSError:
+        os.mkdir(log_file_location)
+
     if groupings is not None:
         use_groupings = groupings
     else:
@@ -135,7 +142,7 @@ def analyze_user_ids(user_ids,results, groupings = None):
             , "language": {"group_by": ["user.language"]}}}
         use_groupings = json.dumps(grouping_dict)
 
-    audience_api_results = api.many_audience_query(list(user_ids), use_groupings, aud_name,  
+    audience_api_results = api.many_audience_query(list(user_ids), use_groupings, aud_name, log_file_location,
             max_upload_size = 100000, max_segment_size = 3000000, max_audience_size = 3000000, min_audience_size = 10000)
     results["audience_api"] = audience_api_results
 
