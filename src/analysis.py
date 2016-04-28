@@ -15,6 +15,11 @@ logr = logging.getLogger("analysis")
 def analyze_tweet(tweet,results):
     """ Add relevant data from 'tweet' to 'results'"""
     
+    # simple tweet counter
+    if 'tweet_count' not in results:
+        results['tweet_count'] = 0
+    results['tweet_count'] += 1
+
     # tweet body information
     if "body_term_count" not in results:
         results["body_term_count"] = SimpleNGrams(
@@ -85,7 +90,12 @@ def analyze_tweet(tweet,results):
 
 def analyze_bio(tweet,results):
     """ Add relevant per-user (rather than per Tweet) data to 'results'"""
-    
+   
+    # simple tweet counter
+    if 'tweet_count' not in results:
+        results['tweet_count'] = 0
+    results['tweet_count'] += 1
+
     if "bio_term_count" not in results:
         results["bio_term_count"] = SimpleNGrams(
                 char_lower_cutoff=3

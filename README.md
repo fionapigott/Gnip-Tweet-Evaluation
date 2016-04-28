@@ -1,5 +1,7 @@
-# Gnip-Insights
+# Gnip-Tweet-Evaluation
 Audience and conversation insights, based on Gnip APIs
+
+## Gnip Audience API use
 
 Put your Gnip Audience API creds in `~/.audience_api_creds`:
 
