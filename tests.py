@@ -1,8 +1,9 @@
 import unittest
-import ujson as json
+import json
 import os
 import subprocess
 
+import gnip_tweet_evaluation
 import evaluate_tweets
 
 INPUT_FILE_NAME = 'dummy_tweets.json'
@@ -46,7 +47,7 @@ class AnalysisTests(unittest.TestCase):
         for tweet in self.tweets:
             addition = " test_term"*counter
             tweet['body'] += addition
-            evaluate_tweets.analysis.analyze_tweet(tweet,conversation_results) 
+            gnip_tweet_evaluation.analysis.analyze_tweet(tweet,conversation_results) 
             counter += 1
         expected_test_count = int(conversation_results['body_term_count'].get_tokens().next()[0])
         self.assertEqual(expected_test_count,sum(range(counter)))
@@ -58,7 +59,7 @@ class AnalysisTests(unittest.TestCase):
         for tweet in self.tweets:
             addition = " test_term"*counter
             tweet['actor']['summary'] += addition
-            evaluate_tweets.analysis.analyze_bio(tweet,audience_results) 
+            gnip_tweet_evaluation.analysis.analyze_bio(tweet,audience_results) 
             counter += 1
         expected_test_count = int(audience_results['bio_term_count'].get_tokens().next()[0])
         self.assertEqual(expected_test_count,sum(range(counter)))
@@ -68,7 +69,7 @@ class AnalysisTests(unittest.TestCase):
         counter = 1
         for tweet in self.tweets:
             tweet['twitter_entities']['hashtags'].append({"text":"notarandomhashtag"}) 
-            evaluate_tweets.analysis.analyze_tweet(tweet,conversation_results) 
+            gnip_tweet_evaluation.analysis.analyze_tweet(tweet,conversation_results) 
             counter += 1
         self.assertEqual(conversation_results['hashtags']['notarandomhashtag'], 100)  
 

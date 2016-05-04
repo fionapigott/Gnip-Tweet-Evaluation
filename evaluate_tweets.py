@@ -1,11 +1,14 @@
 #!/usr/bin/env python
 
 import argparse
-import ujson as json
+try:
+    import ujson as json 
+except ImportError:
+    import json
 import sys
 import datetime
 
-from src import analysis,output
+from gnip_tweet_evaluation import analysis,output
 
 ##
 ## analysis functions
@@ -49,15 +52,6 @@ if __name__ == '__main__':
             help="file containing tweets, tweet IDs, or user IDs; take input from stdin if not present")
     args = parser.parse_args()
 
-    # sanity checking
-    if (args.full_tweet_input and args.tweet_id_input) or (args.full_tweet_input and args.user_id_input) or (args.tweet_id_input and args.user_id_input):
-        sys.stderr.write("Must not choose more than one input type.\n")
-        sys.exit()
-
-    if (args.full_tweet_input is False and args.tweet_id_input is False and args.user_id_input is False):
-        sys.stderr.write("Must choose one input type.\n")
-        sys.exit()
-    
     # get the time right now, to use in output naming
     time_string = datetime.datetime.now().isoformat().split(".")[0].translate(None,":")
 

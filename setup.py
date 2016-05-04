@@ -1,15 +1,14 @@
-from distutils.core import setup
+from setuptools import setup,find_packages
 
 setup(
-    name='gnip_tweet_evaluator',
+    name='gnip_tweet_evaluation',
     version='0.1.0',
     author='Jeff Kolb',
     author_email='jeffakolb@gmail.com',
-    packages=['gnip_tweet_evaluator'],
+    packages=find_packages(),
     scripts=['evaluate_tweets.py'],
-    url='https://github.com/jeffakolb/',
-    download_url='https://github.com/jeffakolb/Gnip-Tweet-Evaluation/tags/',
+    install_requires = ['sngrams','matplotlib'],
+    url='https://github.com/jeffakolb/Gnip-Tweet-Evaluation',
     license='LICENSE.txt',
     description='Conversation and audience analysis of a corpus of Tweet payloads from Gnip/Twitter APIs.', 
-    install_requires=[]
     )

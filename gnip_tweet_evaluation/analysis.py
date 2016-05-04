@@ -1,6 +1,9 @@
 import sys
 import os
-import ujson as json 
+try:
+    import ujson as json  
+except ImportError: 
+    import json
 import logging
 from collections import defaultdict
 from simple_n_grams.simple_n_grams import SimpleNGrams
