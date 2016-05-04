@@ -72,6 +72,5 @@ class AnalysisTests(unittest.TestCase):
             counter += 1
         self.assertEqual(conversation_results['hashtags']['notarandomhashtag'], 100)  
 
-
 if __name__ == '__main__':
     unittest.main()
