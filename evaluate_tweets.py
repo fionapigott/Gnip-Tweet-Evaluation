@@ -78,8 +78,8 @@ if __name__ == '__main__':
 
     # format and dump results
     if args.do_conversation_analysis:
-        analysis.summarize_tweets(conversation_results,args)
-        output.dump_conversation(conversation_results,args)
+        analysis.summarize_tweets(conversation_results)
+        output.dump_conversation(conversation_results)
     if args.do_audience_analysis:
-        analysis.summarize_audience(audience_results,args)
-        output.dump_audience(audience_results,args)
+        analysis.summarize_audience(audience_results)
+        output.dump_audience(audience_results)

@@ -8,7 +8,7 @@ from collections import defaultdict
 import datetime
 from matplotlib import dates, use
 
-def dump_conversation(results,args):
+def dump_conversation(results):
     
     # the name of the analysis
     uid = results["unique_id"]
@@ -126,7 +126,7 @@ def dump_conversation(results,args):
             user_ids_file.write(user_id + "\n")
     user_ids_file.close()
 
-def dump_audience(results,args):
+def dump_audience(results):
 
     # the name of the analysis
     uid = results["unique_id"]

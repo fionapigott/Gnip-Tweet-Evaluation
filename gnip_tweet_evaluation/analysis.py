@@ -159,10 +159,10 @@ def analyze_user_ids(user_ids,results, groupings = None):
             max_upload_size = 100000, max_segment_size = 3000000, max_audience_size = 3000000, min_audience_size = 10000)
     results["audience_api"] = audience_api_results
 
-def summarize_tweets(results,args):
+def summarize_tweets(results):
     """ Generate summary items in results """
     pass
 
-def summarize_audience(results,args):
+def summarize_audience(results):
     """ Generate summary items in results """
     pass
