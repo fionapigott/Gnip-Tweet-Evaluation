@@ -12,13 +12,13 @@ def dump_conversation(results):
     
     # the name of the analysis
     uid = results["unique_id"]
-    data_loc = "/home/jkolb/test/"
+    data_loc = '/home/' + os.getenv('USER') + '/test/'
 
     # make a directory to write the full outputs
     try:
         os.stat(data_loc+uid)
     except:
-        os.mkdir(data_loc+uid)
+        os.makedirs(data_loc+uid)
 
     # body terms
     print "\nTop Tweet terms"
@@ -129,13 +129,13 @@ def dump_conversation(results):
 def dump_audience(results):
 
     # the name of the analysis
-    uid = results["unique_id"]
-    data_loc = "/home/jkolb/test/"
+    uid = results['unique_id']
+    data_loc = '/home/' + os.getenv('USER')  + '/test/'
     # make a directory to write the full outputs
     try:
         os.stat(data_loc + uid)
     except:
-        os.mkdir(data_loc + uid)
+        os.makedirs(data_loc + uid)
 
     # body terms
     if "bio_term_count" in results:
@@ -198,6 +198,8 @@ def flatten_dict(d):
     def expand(key, value):
         if isinstance(value, dict):
             return [ (key + ' | ' + k, v) for k, v in flatten_dict(value).items() ]
+        if isinstance(value, list):
+            return []
         else:
             return [ (key, value) ]
     items = [ item for k, v in d.items() for item in expand(k, v) ]

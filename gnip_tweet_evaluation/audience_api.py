@@ -25,7 +25,12 @@ def single_audience_query(user_ids, groupings, audience_name, log_file_location,
     base_url = creds["url"]
     json_header = {"Content-Type" : "application/json"}
 
-    logging = open(log_file_location + audience_name + "_logging" + "/log_file_for_" + audience_name, "w")
+    logging_dir = log_file_location + audience_name + "_logging" 
+    try:
+        os.stat(logging_dir)
+    except OSError:
+        os.makedirs(logging_dir)
+    logging = open(logging_dir + "/log_file_for_" + audience_name, "w")
 
     # split the UIDS into max_upload_size 
     user_id_chunks = chunks(list(set(user_ids)), max_upload_size)
