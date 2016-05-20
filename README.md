@@ -60,5 +60,5 @@ url: https://data-api.twitter.com/insights/audience
 
 Presuming you have access to the service, the Audience API will will
 be queried any time you request audience analysis ("-a") option and 
-your input Tweet set contains more that 10,000 unique users. 
+your input Tweet set contains more than the minimum number of unique users. 
 

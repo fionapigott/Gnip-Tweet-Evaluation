@@ -2,7 +2,7 @@ from setuptools import setup,find_packages
 
 setup(
     name='gnip_tweet_evaluation',
-    version='0.1.0',
+    version='0.1',
     author='Jeff Kolb',
     author_email='jeffakolb@gmail.com',
     packages=find_packages(),

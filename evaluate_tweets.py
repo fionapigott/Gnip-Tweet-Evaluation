@@ -11,7 +11,7 @@ import datetime
 from gnip_tweet_evaluation import analysis,output
 
 ##
-## analysis functions
+## analysis function
 ##
 
 def run_analysis(input_generator, conversation_results, audience_results): 
@@ -55,7 +55,7 @@ if __name__ == '__main__':
     # get the time right now, to use in output naming
     time_string = datetime.datetime.now().isoformat().split(".")[0].translate(None,":")
 
-    # creat dictionaries for results requested
+    # create dictionaries for results requested
     # entries in these dictionaries map measurement names to data collections
     # start by creating a unique ID from the audience/conversation identifier and the current time
     if args.do_audience_analysis:
