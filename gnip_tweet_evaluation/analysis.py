@@ -13,7 +13,7 @@ import datetime
 def constant_factory():
     return (0, set([]))
 
-logr = logging.getLogger("analysis")
+logger = logging.getLogger("analysis")
 
 def analyze_tweet(tweet,results):
     """ Add relevant data from 'tweet' to 'results'"""

@@ -55,8 +55,7 @@ def add_segment(user_ids, segment_name, max_upload_size = 100000):
     """
 
     # Set up credentials 
-    creds = yaml.load(open("/home/" + os.getenv('USER') + "/.audience_api_creds","r"))
-    auth=OAuth1(creds["consumer_key"],creds["consumer_secret"],creds["token"],creds["token_secret"])
+    creds,auth = get_authentication()
     
     base_url = creds["url"]
     json_header = {"Content-Type" : "application/json"}
@@ -107,11 +106,8 @@ def query_audience(unique_id, groupings):
     Get segments associated with unique_id
     Create and query audience
     """
+    creds,auth = get_authentication()
 
-    # Set up credentials 
-    creds = yaml.load(open("/home/" + os.getenv('USER') + "/.audience_api_creds","r"))
-    auth=OAuth1(creds["consumer_key"],creds["consumer_secret"],creds["token"],creds["token_secret"])
-    
     base_url = creds["url"]
     json_header = {"Content-Type" : "application/json"}
     
@@ -188,3 +184,11 @@ def chunks(l, n):
     for i in xrange(0, len(l), n):
         yield l[i:i+n]
 
+def get_authentication():
+    """ 
+    Set up credentials and authentication 
+    """
+    creds = yaml.load(open(os.getenv('HOME') + "/.audience_api_creds","r"))
+    auth = OAuth1(creds["consumer_key"],creds["consumer_secret"],creds["token"],creds["token_secret"]) 
+    return creds,auth
+    

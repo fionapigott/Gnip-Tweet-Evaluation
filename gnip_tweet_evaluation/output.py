@@ -1,4 +1,5 @@
 import sys
+import logging
 import json
 import os
 import datetime
@@ -10,9 +11,10 @@ import matplotlib.pyplot as plt
 from matplotlib import dates, use
 import audience_api
 
-def dump_conversation(results):
+logger = logging.getLogger('output')
+
+def dump_conversation(results, data_loc):
     uid = results['unique_id']
-    data_loc = '/home/' + os.getenv('USER') + '/test/'
     try:
         os.stat(data_loc + uid)
     except:
@@ -64,7 +66,7 @@ def dump_conversation(results):
         replied_file.close()
     hashtags = sorted(results['hashtags'].items(), key=lambda x: x[1], reverse=True)
     print '\nnumber of times tweeted, hashtag'
-    hashtag_file = open(data_loc + uid + '/' + uid + '_hastags.txt', 'w')
+    hashtag_file = open(data_loc + uid + '/' + uid + '_hashtags.txt', 'w')
     hashtag_file.write('number of times tweeted, hashtag\n')
     for i, hashtag in enumerate([ str(x[1]) + ', ' + x[0] for x in hashtags ]):
         if i <= 10:
@@ -117,9 +119,8 @@ def dump_conversation(results):
     user_ids_file.close()
 
 
-def dump_audience(results):
+def dump_audience(results,data_loc):
     uid = results['unique_id']
-    data_loc = '/home/' + os.getenv('USER') + '/test/'
     try:
         os.stat(data_loc + uid)
     except:
@@ -133,12 +134,15 @@ def dump_audience(results):
         top_bio_terms_file.close()
     
     print '\nAudience API Results'
+    audience_api_file = open(data_loc + uid + '/' + uid + '_audience_api.txt','w')
     if 'error' not in results['audience_api']:
         for i, (grouping_name, grouping_result) in enumerate(results['audience_api'].items()):
             print '\n' + grouping_name + '\n' + '-' * len(grouping_name)
+            audience_api_file.write('\n' + grouping_name + '\n' + '-' * len(grouping_name))
             
             if 'errors' in grouping_result:
                 print( grouping_result['errors'][0] )
+                audience_api_file.write(grouping_result['errors'][0])
             else:
                 def expand(key, value):
                     if isinstance(value, dict):
@@ -154,8 +158,10 @@ def dump_audience(results):
                 
                 for line in grouping_result_csv:
                     print line[0] + ' | ' + str(line[1]) 
+                    audience_api_file.write(line[0] + ' | ' + str(line[1]) )
     else:
         print 'Error: ' + results['audience_api']['error']
+        audience_api_file.write('Error: ' + results['audience_api']['error'])
     
     
     if 'age_and_gender_breakdown' in results:
