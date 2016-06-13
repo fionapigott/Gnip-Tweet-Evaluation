@@ -15,30 +15,22 @@ from gnip_tweet_evaluation import analysis,output
 ## analysis function
 ##
 
-def run_analysis(input_generator, conversation_results, audience_results): 
+def run_analysis(input_generator, results): 
     """ iterate over Tweets and analyze"""
-    user_ids = set()
+
     for line in input_generator: 
+        # if it's not JSON, skip it
         try:
             tweet = json.loads(line)  
         except ValueError:
             continue
+        # analyze each Tweet
+        analysis.analyze_tweet(tweet,results)
         
-        # account for compliance and other non-standard tweet payloads
-        if "actor" not in tweet:
-            continue
-        if conversation_results is not None:
-            analysis.analyze_tweet(tweet,conversation_results)
-        if audience_results is not None:
-            user_id = int(tweet["actor"]["id"].split(":")[2])
-            if user_id not in user_ids:
-                analysis.analyze_bio(tweet,audience_results)
-                user_ids.add( user_id ) 
-        
-    if audience_results is not None:
-        analysis.analyze_user_ids(user_ids,audience_results)
+    if "audience_api" in results:
+        analysis.analyze_user_ids(results["tweets_per_user"].keys(),results)
     
-    return user_ids
+    return results["tweets_per_user"].keys()
 
 if __name__ == '__main__':
     
@@ -62,19 +54,12 @@ if __name__ == '__main__':
             ,time_now.year
             ,time_now.month
             ,time_now.day
-            ) 
+            )
+   
+    # create the output directory if it doesn't exist
+    ### 
 
-    # create dictionaries for results requested
-    # entries in these dictionaries map measurement names to data collections
-    # start by creating a unique ID from the audience/conversation identifier and the current time
-    if args.do_audience_analysis:
-        audience_results = {"unique_id": args.unique_identifier + "_" + time_string} 
-    else:
-        audience_results = None
-    if args.do_conversation_analysis:
-        conversation_results = {"unique_id": args.unique_identifier + "_" + time_string} 
-    else:
-        conversation_results = None
+    results = analysis.setup_analysis(conversation = args.do_conversation_analysis, audience = args.do_audience_analysis) 
 
     # manage input source
     if args.input_file_name is not None:
@@ -83,12 +68,7 @@ if __name__ == '__main__':
         input_generator = sys.stdin
 
     # run analysis
-    run_analysis(input_generator,conversation_results,audience_results)
+    run_analysis(input_generator, results)
 
-    # format and dump results
-    if args.do_conversation_analysis:
-        analysis.summarize_tweets(conversation_results)
-        output.dump_conversation(conversation_results,output_directory) 
-    if args.do_audience_analysis:
-        analysis.summarize_audience(audience_results)
-        output.dump_audience(audience_results,output_directory)
+    # dump the output
+    output.dump_results(results, output_directory, args.unique_identifier)

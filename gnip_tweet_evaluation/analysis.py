@@ -1,8 +1,8 @@
 import sys
-import os
+#import is
 try:
-    import ujson as json  
-except ImportError: 
+    import ujson as json
+except ImportError:
     import json
 import logging
 from collections import defaultdict
@@ -10,123 +10,163 @@ from simple_n_grams.simple_n_grams import SimpleNGrams
 import uuid
 import datetime
 
-def constant_factory():
-    return (0, set([]))
+def weight_and_screennames():
+    return {"weight": 0, "screennames": set([])}
 
 logger = logging.getLogger("analysis")
 
-def analyze_tweet(tweet,results):
-    """ Add relevant data from 'tweet' to 'results'"""
-    
-    # simple tweet counter
-    if 'tweet_count' not in results:
-        results['tweet_count'] = 0
-    results['tweet_count'] += 1
-
-    # tweet body term counts
-    if "body_term_count" not in results:
+def setup_analysis(conversation = False, audience = False):
+    """create the results dictionary"""
+    results = {
+            "tweet_count": 0,
+            "non-tweet_lines": 0,
+            "tweets_per_user": defaultdict(int),
+            #"user_id_to_screenname": 
+    }
+    if conversation:
         results["body_term_count"] = SimpleNGrams(
                 char_lower_cutoff=3
                 ,n_grams=1
                 ,tokenizer="twitter"
                 )
-    results["body_term_count"].add(tweet["body"])
-
-    # which users are involved
-    if "at_mentions" not in results:
-        results["at_mentions"] = defaultdict(constant_factory)
-    #if "mention_edges" not in results:
-    #    results["mention_edges"] = {}
-    for u in [x for x in tweet["twitter_entities"]["user_mentions"]]:
-    	results["at_mentions"][u["id_str"]] = (results["at_mentions"][u["id_str"]][0] + 1, 
-                results["at_mentions"][u["id_str"]][1] | set([u["screen_name"].lower()]))
-        #if u not in results["mention_edges"]:
-        #    results["mention_edges"][u["id_str"]] = {tweet["actor"]["id"][15:]: 1}
-        #else:
-        #    actor_id = tweet["actor"]["id"][15:]
-        #    if actor_id not in results["mention_edges"][u["id_str"]]:
-        #        results["mention_edges"][u["id_str"]][actor_id] = 1
-        #    else:
-        #        results["mention_edges"][u["id_str"]][actor_id] += 1
-    
-    if "inReplyTo" in tweet:
-        if "in_reply_to" not in results:
-            results["in_reply_to"] = defaultdict(int)
-        results["in_reply_to"][tweet["inReplyTo"]["link"].split("/")[3].lower()] += 1
-
-    if tweet["verb"] == "share":
-        if "RT_of_user" not in results:
-            results["RT_of_user"] = defaultdict(constant_factory)
-        rt_of_name = tweet["object"]["actor"]["preferredUsername"].lower()
-        rt_of_id = tweet["object"]["actor"]["id"][15:]
-        results["RT_of_user"][rt_of_id] = (results["RT_of_user"][rt_of_id][0] + 1, 
-                results["RT_of_user"][rt_of_id][1] | set([rt_of_name]))
-
-    if "hashtags" not in results:
         results["hashtags"] = defaultdict(int)
-    if "hashtags" in tweet["twitter_entities"]:
-       for h in [x["text"].lower() for x in tweet["twitter_entities"]["hashtags"]]:
-            results["hashtags"][h] += 1
-
-    if "local_timeline" not in results:
-        results["local_timeline"] = defaultdict(int)
-    utcOffset = tweet["actor"]["utcOffset"]
-    if utcOffset is not None:
-        posted = tweet["postedTime"]
-        hour_and_minute = (datetime.datetime.strptime(posted[0:16], "%Y-%m-%dT%H:%M") + 
-                datetime.timedelta(seconds = int(utcOffset))).time().strftime("%H:%M")
-        results["local_timeline"][hour_and_minute] += 1
-
-    if "urls" not in results:
         results["urls"] = defaultdict(int)
-    if "urls" in tweet["gnip"]:
-        try:
-            for url in [x["expanded_url"] for x in tweet["gnip"]["urls"]]:
-                results["urls"][url.split("/")[2]] += 1
-        except (KeyError,IndexError):
-            pass
+        results["number_of_links"] = 0
+        results["utc_timeline"] = defaultdict(int)
+        results["local_timeline"] = defaultdict(int)
+        results["at_mentions"] = defaultdict(weight_and_screennames)
+        results["in_reply_to"] = defaultdict(int)
+        results["RT_of_user"] = defaultdict(weight_and_screennames)
+        results["quote_of_user"] = defaultdict(weight_and_screennames)
 
-    if "user_ids_user_freq" not in results:
-        results["user_ids_user_freq"] = defaultdict(int)
-    results["user_ids_user_freq"][tweet["actor"]["id"][15:]] += 1
-
-def analyze_bio(tweet,results):
-    """ Add relevant per-user (rather than per Tweet) data to 'results'"""
-   
-    # simple tweet counter
-    if 'tweet_count' not in results:
-        results['tweet_count'] = 0
-    results['tweet_count'] += 1
-
-    if "bio_term_count" not in results:
+    if audience:
         results["bio_term_count"] = SimpleNGrams(
                 char_lower_cutoff=3
                 ,n_grams=1
                 ,tokenizer="twitter"
                 )
-    results["bio_term_count"].add(tweet["actor"]["summary"])
+        results["profile_locations_regions"] = defaultdict(int)
+        results["audience_api"] = ""
 
-    if "enrichments" in tweet:
-        if "age_and_gender_breakdown" not in results:
-            results["age_and_gender_breakdown"] = defaultdict(int)
-        age = tweet["enrichments"]["UserAgeAndGender"]["age"]
-        gender = tweet["enrichments"]["UserAgeAndGender"]["gender"]
-        results["age_and_gender_breakdown"][(gender, age)] += 1
+    # in the future we could add custom fields by adding kwarg = func where func is agg/extractor and kwarg is field name
+    
+    return results
 
-    #if "age_breakdown" not in results:
-    #    results["age_breakdown"] = defaultdict(int)
-    #results["age_breakdown"][tweet["enrichments"]["UserAgeAndGender"]["age"]] += 1
+def analyze_tweet(tweet, results):
+    """Add relevant data from a tweet to 'results'"""
 
-    if "profileLocations" in tweet["gnip"]:
-        if "profile_locations_regions" not in results:
-            results["profile_locations_regions"] = defaultdict(int)
-        address = tweet["gnip"]["profileLocations"][0]["address"]
-        if ("country" in address) and ("region" in address):
-            results["profile_locations_regions"][address["country"] + " , " + address["region"]] += 1
+    ######################################
+    # fields that are relevant for user-level and tweet-level analysis
+    # count the number of valid Tweets here
+    # if it doesn't have at least a body and an actor, it's not a tweet
+    try: 
+        body = tweet["body"]
+        userid = tweet["actor"]["id"][:15]
+        results["tweet_count"] += 1
+    except (ValueError, KeyError):
+        if "non-tweet_lines" in results:
+            results["non-tweet_lines"] += 1
+        return
 
-    #if "profile_locations_cities" not in results:
-    #    results["profile_locations_cities"] = defaultdict(int)
+    # count the number of tweets from each user
+    if "tweets_per_user" in results:
+        results["tweets_per_user"][tweet["actor"]["id"][15:]] += 1
+    
+    #######################################
+    # fields that are relevant for the tweet-level analysis
+    # ------------------> term counts
+    # Tweet body term count
+    if "body_term_count" in results:
+        results["body_term_count"].add(tweet["body"])
 
+    # count the occurences of different hashtags
+    if "hashtags" in results:
+        if "hashtags" in tweet["twitter_entities"]:
+            for h in tweet["twitter_entities"]["hashtags"]:
+                results["hashtags"][h["text"].lower()] += 1
+    
+    # count the occurences of different top-level domains
+    if ("urls" in results) and ("urls" in tweet["gnip"]):
+        for url in tweet["gnip"]["urls"]:
+            try:
+                results["urls"][url["expanded_url"].split("/")[2]] += 1
+            except (KeyError,IndexError):
+                pass
+    # and the number of links total
+    if ("number_of_links" in results) and ("urls" in tweet["gnip"]):
+        results["number_of_links"] += len(tweet["gnip"]["urls"])
+    
+    # -----------> timelines
+    # make a timeline of UTC day of Tweets posted
+    if "utc_timeline" in results:
+        date = tweet["postedTime"][0:10]
+        results["utc_timeline"][date] += 1
+
+    # make a timeline in normalized local time (poster's time) of all of the Tweets
+    if "local_timeline" in results:
+        utcOffset = tweet["actor"]["utcOffset"]
+        if utcOffset is not None:
+            posted = tweet["postedTime"]
+            hour_and_minute = (datetime.datetime.strptime(posted[0:16], "%Y-%m-%dT%H:%M") + 
+                    datetime.timedelta(seconds = int(utcOffset))).time().strftime("%H:%M")
+            results["local_timeline"][hour_and_minute] += 1
+    
+    # ------------> mention results
+    # which users are @mentioned in the Tweet
+    if "at_mentions" in results:
+        for u in tweet["twitter_entities"]["user_mentions"]:
+            # update the mentions with weight + 1 and 
+            # list all of the screennames (in case a name changes)
+            if u["id_str"] is not None:
+                results["at_mentions"][u["id_str"]]["weight"] += 1 
+                results["at_mentions"][u["id_str"]]["screennames"].update([u["screen_name"].lower()])
+    
+    # count the number of times each user gets replies
+    if ("in_reply_to" in results) and ("inReplyTo" in tweet):
+        results["in_reply_to"][tweet["inReplyTo"]["link"].split("/")[3].lower()] += 1
+
+    # --------------> RTs and quote Tweet
+    # count share actions (RTs and quote-Tweets)
+    # don't count self-quotes or self-RTs, because that's allowed now
+    if (("quote_of_user" in results) or ("RT_of_user" in results)) and (tweet["verb"] == "share"):
+        # if it's a quote tweet
+        if ("quote_of_user" in results) and ("twitter_quoted_status" in tweet["object"]):
+            quoted_id = tweet["object"]["twitter_quoted_status"]["actor"]["id"][15:]
+            quoted_name = tweet["object"]["twitter_quoted_status"]["actor"]["preferredUsername"]
+            if quoted_id != tweet["actor"]["id"]:
+                results["quote_of_user"][quoted_id]["weight"] += 1       
+                results["quote_of_user"][quoted_id]["screennames"].update([quoted_name])
+        # if it's a RT
+        elif ("RT_of_user" in results):
+            rt_of_name = tweet["object"]["actor"]["preferredUsername"].lower()
+            rt_of_id = tweet["object"]["actor"]["id"][15:]
+            if rt_of_id != tweet["actor"]["id"]:
+                results["RT_of_user"][rt_of_id]["weight"] += 1 
+                results["RT_of_user"][rt_of_id]["screennames"].update([rt_of_name])
+
+    ############################################
+    # actor-property qualities
+    # ------------> bio terms
+    if "bio_term_count" in results:
+        if tweet["actor"]["id"][:15] not in results["tweets_per_user"]:
+            try:
+                if tweet["actor"]["summary"] is not None:
+                    results["bio_term_count"].add(tweet["actor"]["summary"])
+            except KeyError:
+                pass
+    
+    # ---------> profile locations
+    if "profile_locations_regions" in results:
+        # if possible, get the user's address
+        try:
+            address = tweet["gnip"]["profileLocations"][0]["address"]
+            country_key = address.get("country", "no country available")
+            region_key = address.get("region", "no region available")
+        except KeyError:
+            country_key = "no country available"
+            region_key = "no region available"
+        results["profile_locations_regions"][country_key + " , " + region_key] += 1
+    
 def analyze_user_ids(user_ids,results, groupings = None):
     """ call to Audience API goes here """
     import audience_api as api
@@ -145,12 +185,5 @@ def analyze_user_ids(user_ids,results, groupings = None):
             , "language": {"group_by": ["user.language"]}}}
         use_groupings = json.dumps(grouping_dict)
 
-    results['audience_api'] = api.query_users(list(user_ids), use_groupings)
+    results["audience_api"] = api.query_users(list(user_ids), use_groupings)
 
-def summarize_tweets(results):
-    """ Generate summary items in results """
-    pass
-
-def summarize_audience(results):
-    """ Generate summary items in results """
-    pass
