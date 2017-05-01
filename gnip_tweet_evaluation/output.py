@@ -84,6 +84,11 @@ def local_timeline_plot(minute_dict, title, output_path_base):
     for key, value in minute_dict.items():
         hour_dict[key.split(':')[0]] += value
     hour = hour_dict.items()
+    # write out the timeline data so that I can use it later if necessary
+    timeline_file = open(output_path_base + title + ".csv", "w")
+    timeline_file.write("\n".join(["{},{}".format(x[0],x[1]) for x in sorted(hour, key=lambda x: x[0])]))
+    timeline_file.close()
+    # make the plot
     times_values = sorted([ (datetime.datetime.strptime(x[0], '%H'), x[1]) for x in hour ], key=lambda x: x[0])
     times = [ x[0] for x in times_values ]
     values = [ x[1] for x in times_values ]
@@ -174,6 +179,10 @@ def dump_results(results, output_path, uid):
         count_frequency_output(results["hashtags"], 
                 "hashtags", "number of times tweeted", "hashtag", output_file_base)
     
+    if "url_content" in results:
+        top_terms_output(results["url_content"], 
+                "url_content", output_file_base)
+
     if "local_timeline" in results and do_plotting:
         local_timeline_plot(results["local_timeline"], 
                 "local_timeline", output_file_base)

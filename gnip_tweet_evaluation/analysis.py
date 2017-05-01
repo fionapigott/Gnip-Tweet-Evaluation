@@ -82,9 +82,11 @@ def analyze_user_ids(user_ids_analyzed, results, groupings = None, user_ids_base
         use_groupings = groupings
     else:
         grouping_dict = {"groupings": {
-            "gender": {"group_by": ["user.gender"]}
+              "gender": {"group_by": ["user.gender"]}
+            , "age": {"group_by": ["user.age"]}
             , "location_country": {"group_by": ["user.location.country"]}
             , "location_country_region": {"group_by": ["user.location.country", "user.location.region"]}
+            , "location_country_metro": {"group_by": ["user.location.country", "user.location.metro"]}
             , "interest": {"group_by": ["user.interest"]}
             , "tv_genre": {"group_by": ["user.tv.genre"]}
             , "device_os": {"group_by": ["user.device.os"]}
@@ -102,6 +104,8 @@ def analyze_user_ids(user_ids_analyzed, results, groupings = None, user_ids_base
         compare_results(results)
 
     else:
+        if len(list(user_ids_analyzed)) == 0:
+            raise ValueError("No user ids found to analyze")
         results["audience_api"] = api.query_users(list(user_ids_analyzed), use_groupings)
 
 
@@ -173,7 +177,7 @@ def setup_analysis(conversation = False, audience = False, identifier = None, in
     if conversation:
         results["body_term_count"] = SimpleNGrams(
                 char_lower_cutoff=3
-                ,n_grams=1
+                ,n_grams=4
                 ,tokenizer="twitter"
                 )
         results["hashtags"] = defaultdict(int)
@@ -185,7 +189,11 @@ def setup_analysis(conversation = False, audience = False, identifier = None, in
         results["in_reply_to"] = defaultdict(int)
         results["RT_of_user"] = defaultdict(weight_and_screennames)
         results["quote_of_user"] = defaultdict(weight_and_screennames)
-
+        results["url_content"] = SimpleNGrams(
+                char_lower_cutoff=3
+                ,n_grams=3
+                ,tokenizer="twitter"
+                )
     if audience:
         results["bio_term_count"] = SimpleNGrams(
                 char_lower_cutoff=3
@@ -216,7 +224,7 @@ def analyze_tweet(tweet, results):
     # if it doesn't have at least a body and an actor, it's not a tweet
     try: 
         body = tweet["body"]
-        userid = tweet["actor"]["id"][:15]
+        userid = tweet["actor"]["id"].split(":")[-1]
         results["tweet_count"] += 1
     except (ValueError, KeyError):
         if "non-tweet_lines" in results:
@@ -302,6 +310,29 @@ def analyze_tweet(tweet, results):
                 results["RT_of_user"][rt_of_id]["weight"] += 1 
                 results["RT_of_user"][rt_of_id]["screennames"].update([rt_of_name])
 
+    # Tweet expended url content term count
+    if "url_content" in results:
+        try:
+            urls = tweet["gnip"]["urls"]
+        except KeyError:
+            urls = []
+        url_content = ""
+        for url in urls:
+            try:
+                expanded_url_title = url["expanded_url_title"]
+                if expanded_url_title is None:
+                    expanded_url_title = ""
+            except KeyError:
+                expanded_url_title = ""
+            try:
+                expanded_url_description = url["expanded_url_description"]
+                if expanded_url_description is None:
+                    expanded_url_description = ""
+            except KeyError:
+                expanded_url_description = ""
+            url_content = url_content + " " + expanded_url_title + " " + expanded_url_description
+        results["url_content"].add(url_content)
+    
     ############################################
     # actor-property qualities
     # ------------> bio terms
