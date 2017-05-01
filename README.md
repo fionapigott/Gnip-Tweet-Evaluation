@@ -151,4 +151,30 @@ url: https://data-api.twitter.com/insights/audience
 Presuming you have access to the service, the Audience API will will
 be queried any time you request audience analysis ("-a") option and 
 your input Tweet set contains more than the minimum number of unique users. 
+=======
+This tool can be configured to perform a relative evaluation,
+in which the results for an _analysis_ set of Tweets is shown relative to the
+results for a _baseline_ set of Tweets. In the case of audience analysis,
+the results for the _analysis_ user IDs are compared to those for the 
+_baseline_ user IDs.This functionality is enabled by specifying a 
+set of baseline Tweets with the `-b` option. The analysis Tweets are passes in as before.
+
+If audience analysis is selected, a relative analysis returns 
+difference in percentage for each category in the output taxonomy 
+of the Audience API. If a category is below the reporting threshold 
+for either set of users, it is not displayed in the relative analysis
+output. Other elements of the audience analysis, such as geo locations,
+are not implement for the relative analysis. If conversation analysis
+is selected, a relative analysis returns the top over- and under-indexing
+elements of the URLs and hashtags lists. No other elements of the 
+conversation analysis output are implemented for relative analysis.
+
+Relative results for top-n lists are defined as follows:
+
+The count for item `k` in the analyzed Tweets is `a_k`,
+and `b_k` in the baseline Tweets. The sum of `a_k` for all `k`
+found in the analyzed Tweets is `A`, and similarly `B` for the
+baseline Tweets. To produce relative results, the `a_k` are 
+re-weighted: `a'_k = a_k * ((a_k / A) - (b_k / B)) / (b_k / B)`.
+The top `a'_k` by absolute value are displayed. 
 
