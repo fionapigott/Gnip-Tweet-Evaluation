@@ -177,8 +177,8 @@ def setup_analysis(do_conversation = False, do_audience = False, identifier = No
             "tweets_per_user": defaultdict(int),
             #"user_id_to_screenname": 
     }
-    if conversation:
-        results['do_conversation'] = True
+    if do_conversation:
+        results["do_conversation"] = True
         results["body_term_count"] = SimpleNGrams(
                 char_lower_cutoff=3
                 ,n_grams=3
@@ -198,7 +198,10 @@ def setup_analysis(do_conversation = False, do_audience = False, identifier = No
                 ,n_grams=3
                 ,tokenizer="twitter"
                 )
-    if audience:
+    else:
+        results["do_conversation"] = False
+    if do_audience:
+        results["do_audience"] = True
         results["bio_term_count"] = SimpleNGrams(
                 char_lower_cutoff=3
                 ,n_grams=1
@@ -206,6 +209,8 @@ def setup_analysis(do_conversation = False, do_audience = False, identifier = No
                 )
         results["profile_locations_regions"] = defaultdict(int)
         results["audience_api"] = ""
+    else:
+        results["do_audience"] = False
 
     # in the future we could add custom fields by adding kwarg = func where func is agg/extractor and kwarg is field name
    
