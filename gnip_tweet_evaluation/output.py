@@ -113,7 +113,7 @@ def audience_api_output(audience_api_results, output_path_base):
         for i, (grouping_name, grouping_result) in enumerate(audience_api_results.items()):
             print('\n' + grouping_name + '\n' + '-' * len(grouping_name))
             audience_api_file.write('\n' + grouping_name + '\n' + '-' * len(grouping_name) + '\n')
-            
+
             if 'errors' in grouping_result:
                 print( grouping_result['errors'][0] )
                 audience_api_file.write(grouping_result['errors'][0])

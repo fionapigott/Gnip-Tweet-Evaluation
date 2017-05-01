@@ -14,6 +14,6 @@ def baseline_function(tweet):
     return not analyzed_function(tweet)
 
 splitting_config = {
-'analyzed':analyzed_function,
-'baseline':baseline_function
+    'analyzed':analyzed_function,
+    'baseline':baseline_function
 }
